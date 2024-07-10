@@ -122,9 +122,9 @@ class VAE_Decoder(nn.Sequential):
 
             VAE_ResidualBlock(128, 128),
 
-            nn.GroupNorm(32, 128)
+            nn.GroupNorm(32, 128),
 
-            nn.SiLU()
+            nn.SiLU(),
 
             # (Batch_Size, 128, Height, Width) -> (Batch_Size, 3, Height, Width)
             nn.Conv2d(128, 3, kernel_size=3, padding=1)

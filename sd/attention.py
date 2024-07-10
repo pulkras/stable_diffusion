@@ -10,7 +10,7 @@ class SelfAttention(nn.Module):
 
         self.in_proj = nn.Linear(d_embed, 3 * d_embed, bias=in_proj_bias)
 
-        self.out_proj == nn.Linear(d_embed, d_embed, bias=out_proj_bias)
+        self.out_proj = nn.Linear(d_embed, d_embed, bias=out_proj_bias)
 
         self.n_heads = n_heads
 

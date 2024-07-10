@@ -167,14 +167,17 @@ class SwitchSequential(nn.Sequential):
     
 
 class UNET(nn.Module):
-    def __init__(self):
+    def __init__(self, num_groups, num_channels):
         super().__init__()
-
-        self.encoders = nn.Module([
+        if num_channels % num_groups != 0:
+            raise ValueError('num_channels must be divisible by num_groups')
+        self.num_groups = num_groups
+        self.num_channels = num_channels
+        self.encoders = nn.ModuleList([
             # (Batch_Size, 4, Height / 8, Width / 8)
             SwitchSequential(nn.Conv2d(4, 320, kernel_size=3, padding=1)),
 
-            SwitchSequential(UNET_ResidualBlock(320, 320), UNET_AttentionBlock(8,40)),
+            SwitchSequential(UNET_ResidualBlock(320, 320), UNET_AttentionBlock(8, 40)),
 
             SwitchSequential(UNET_ResidualBlock(320, 320), UNET_AttentionBlock(8,40)),
 
@@ -198,7 +201,7 @@ class UNET(nn.Module):
             SwitchSequential(UNET_ResidualBlock(1280, 1280)),
 
             # (Batch_Size, 1280, Height / 64, Width / 64) -> (Batch_Size, 1280, Height / 64, Width / 64))
-            SwitchSequential(UNET_ResidualBlock(1280, 1280))
+            SwitchSequential(UNET_ResidualBlock(1280, 1280)),
         ])
 
         self.bottleneck = SwitchSequential(
@@ -258,7 +261,7 @@ class UNET_OutputLayer(nn.Module):
 
 class Diffusion(nn.Module):
     def __init__(self):
-
+        super().__init__()
         self.time_embedding = TimeEmbedding(320)
         self.unet = UNET()
         self.final = UNET_OutputLayer(320, 4)
