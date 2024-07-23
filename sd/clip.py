@@ -8,7 +8,7 @@ class CLIPEmbedding(nn.Module):
         super().__init__()
 
         self.token_embedding = nn.Embedding(n_vocab, n_embd)
-        self.position_embedding = nn.Parameters(torch.zeros(n_tokens, n_embd))
+        self.position_embedding = nn.Parameter(torch.zeros(n_tokens, n_embd))
 
     def forward(self, tokens):
         # (Batch_Size, Seq_Len) -> (Batch_Size, Seq_Len, Dim)
@@ -61,24 +61,26 @@ class CLIPLayer(nn.Module):
         return x
 class CLIP(nn.Module):
     def __init__(self):
+        super().__init__()
         self.embedding = CLIPEmbedding(49408, 768, 77)
 
-        self.layers = nn.Module([
+        self.layers = nn.ModuleList([
             CLIPLayer(12, 768) for i in range(12)
         ])
 
         self.layernorm = nn.LayerNorm(768)
-
-    def forward(self, token: torch.LongTensor) -> torch.FloatTensor:
-        tokens = token.type(torch.long)
-
+    
+    def forward(self, tokens: torch.LongTensor) -> torch.FloatTensor:
+        tokens = tokens.type(torch.long)
+        
         # (Batch_Size, Seq_Len) -> (Batch_Size, Seq_Len, Dim)
-        stats = self.embedding(tokens)
+        state = self.embedding(tokens)
 
-        for layer in self.layers:
+        # Apply encoder layers similar to the Transformer's encoder.
+        for layer in self.layers: 
+            # (Batch_Size, Seq_Len, Dim) -> (Batch_Size, Seq_Len, Dim)
             state = layer(state)
-
-        # (Batch_Size, Seq_Len, Dim)
-        output = self.layernorm(stats)
-
+        # (Batch_Size, Seq_Len, Dim) -> (Batch_Size, Seq_Len, Dim)
+        output = self.layernorm(state)
+        
         return output
